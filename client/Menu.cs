@@ -22,8 +22,6 @@ namespace EEPROMProgrammer
             _eraseRomCallback = eraseRomCallback ?? throw new ArgumentNullException(nameof(eraseRomCallback));
         }
 
-
-
         private void ShowMenu()
         {
             ConsoleWrite("EEPROM Programmer", ConsoleColor.Yellow);

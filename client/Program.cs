@@ -5,6 +5,7 @@ namespace EEPROMProgrammer
     public class EEPROMProgrammerMain
     {
         private const string _VERSION = "0.1";
+        private static Protocol _protocol;
 
         private static readonly string[] ARDUINO_NAMES = { "CH340", "Arduino Uno" };
 
@@ -28,7 +29,6 @@ namespace EEPROMProgrammer
 
         public static void Main(string[] args)
         {
-
             ConsoleClear();
             ConsoleCentreMessage("Searching for Arduino...", ConsoleColor.Yellow);
 
@@ -38,8 +38,12 @@ namespace EEPROMProgrammer
                 ConsoleClear();
                 ConsoleCentreMessage($"Arduino found on port {serialPort}", ConsoleColor.Green);
                 var menu = new Menu(serialPort, _VERSION, ReadEEPROM, WriteEEPROM, EraseEEPROM);
+                var serialComms = new SerialComms(serialPort, 9600);
+                var _protocol = new Protocol(serialComms);
+
                 Thread.Sleep(1000);
                 while (!menu.Process()) ;
+
             }
             else
             {
