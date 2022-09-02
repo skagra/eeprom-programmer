@@ -16,6 +16,18 @@ public static class ColorConsole
         Console.WriteLine();
     }
 
+    public static void ConsoleWriteMiddle(string message, ConsoleColor color = ConsoleColor.White)
+    {
+        Console.CursorLeft = HorizontalCentreCursor(message);
+        ConsoleWrite(message, color);
+    }
+
+    public static void ConsoleWritelnMiddle(string message, ConsoleColor color = ConsoleColor.White)
+    {
+        Console.CursorLeft = HorizontalCentreCursor(message);
+        ConsoleWriteln(message, color);
+    }
+
     public static int HorizontalCentreCursor(int messageWidth)
     {
         return (Console.WindowWidth - messageWidth) / 2;

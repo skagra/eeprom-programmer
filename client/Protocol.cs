@@ -2,6 +2,8 @@ using NLog;
 
 namespace EEPROMProgrammer
 {
+    using static EEPROMDefinition;
+
     public class Protocol
     {
         private const int BLOCK_SIZE = 64;
@@ -27,7 +29,7 @@ namespace EEPROMProgrammer
             {
                 throw new ArgumentOutOfRangeException($"Message limited to a maximum of 255 bytes");
             }
-            _serialComms.Write(new byte[] { bufferSize, operation }, 0, 2);
+            _serialComms.Write(new byte[] { (byte)(bufferSize + 1), operation }, 0, 2);
             _serialComms.Write(buffer, 0, bufferSize);
         }
 
@@ -38,6 +40,8 @@ namespace EEPROMProgrammer
             byte sizeByte = byteBuffer[0];
 
             _logger.Debug("Incoming size byte '{0}'", sizeByte);
+
+            Console.WriteLine($"Size: {sizeByte}");
 
             // Read the rest of the packet
             byte[] buffer = new byte[sizeByte];
@@ -52,6 +56,7 @@ namespace EEPROMProgrammer
 
             _logger.Debug("Incoming protocol '{0}'", (BitConverter.ToString(buffer)));
 
+            Console.WriteLine($"Op: {buffer[0]}");
             return (buffer[0], buffer[1..]);
         }
 
@@ -68,10 +73,15 @@ namespace EEPROMProgrammer
             }
         }
 
-        public byte[] ReadBlock(ushort offset)
+        public byte[] ReadBlock(ushort blockNumber)
         {
-            var len = ToBytes(offset);
-            WriteMessage(OPCODE_OUT_READ_BLOCK_REQUEST, new byte[] { len.lsb, len.msb });
+            if (blockNumber >= _ROM_SIZE_BLOCKS)
+            {
+                throw new ArgumentOutOfRangeException(nameof(blockNumber));
+            }
+
+            var blockNumberBytes = ToBytes(blockNumber);
+            WriteMessage(OPCODE_OUT_READ_BLOCK_REQUEST, new byte[] { blockNumberBytes.lsb, blockNumberBytes.msb });
 
             var (op, buffer) = ReadMessage();
 
@@ -90,17 +100,22 @@ namespace EEPROMProgrammer
             return buffer;
         }
 
-        public void WriteBlock(ushort offset, byte[] block)
+        public void WriteBlock(ushort blockNumber, byte[] block)
         {
             if (block.Length != BLOCK_SIZE)
             {
                 throw new ArgumentOutOfRangeException(nameof(block));
             }
 
-            var offsetBytes = ToBytes(offset);
+            if (blockNumber >= _ROM_SIZE_BLOCKS)
+            {
+                throw new ArgumentOutOfRangeException(nameof(blockNumber));
+            }
+
+            var blockNumberBytes = ToBytes(blockNumber);
             byte[] buffer = new byte[2 + BLOCK_SIZE];
-            buffer[0] = offsetBytes.lsb;
-            buffer[1] = offsetBytes.msb;
+            buffer[0] = blockNumberBytes.lsb;
+            buffer[1] = blockNumberBytes.msb;
             Array.Copy(block, 0, buffer, 2, BLOCK_SIZE);
             WriteMessage(OPCODE_OUT_WRITE_BLOCK_REQUEST, buffer);
 

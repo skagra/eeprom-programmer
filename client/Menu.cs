@@ -1,17 +1,20 @@
-using static EEPROMProgrammer.ColorConsole;
+
 
 namespace EEPROMProgrammer
 {
+    using static ColorConsole;
+    using static EEPROMDefinition;
+
     public class Menu
     {
         private readonly string _version;
         private readonly string _serialPort;
 
-        private readonly Func<UInt16, UInt16, bool> _readRomCallback;
+        private readonly Func<ushort, ushort, bool> _readRomCallback;
         private readonly Func<string, bool> _writeRomCallback;
         private readonly Func<bool> _eraseRomCallback;
 
-        public Menu(string serialPort, string version, Func<UInt16, UInt16, bool> readRomCallback,
+        public Menu(string serialPort, string version, Func<ushort, ushort, bool> readRomCallback,
             Func<string, bool> writeRomCallback,
             Func<bool> eraseRomCallback)
         {
@@ -24,13 +27,12 @@ namespace EEPROMProgrammer
 
         private void ShowMenu()
         {
-            ConsoleWrite("EEPROM Programmer", ConsoleColor.Yellow);
-            Console.WriteLine($" on port '{_serialPort}'", ConsoleColor.Gray);
+            ConsoleWriteln("EEPROM Programmer", ConsoleColor.Yellow);
             Console.WriteLine();
             ConsoleWriteln("1) Read EEPROM");
             ConsoleWriteln("2) Write EEPROM");
             ConsoleWriteln("3) Erase EEPROM");
-            ConsoleWriteln("4) Show version");
+            ConsoleWriteln("4) Show configuration");
             ConsoleWriteln("5) Exit");
             Console.WriteLine();
             ConsoleWrite("Enter choice> ", ConsoleColor.Yellow);
@@ -39,19 +41,22 @@ namespace EEPROMProgrammer
         private void ShowVersion()
         {
             ConsoleClear();
-            var message = $"# EEPROM Programmer version {_version} #";
-            var messageLength = message.Length;
-            var messageLeft = HorizontalCentreCursor(message);
-            var border = new string('#', messageLength);
+
+            const int boxWidth = 40;
+            var border = new string('#', boxWidth);
+            var wrapper = $"#{new string(' ', boxWidth - 2)}#";
 
             Console.CursorTop = VerticalCentreCursor(3);
-
-            Console.CursorLeft = messageLeft;
-            ConsoleWriteln(border, ConsoleColor.Yellow);
-            Console.CursorLeft = messageLeft;
-            ConsoleWriteln(message, ConsoleColor.Yellow);
-            Console.CursorLeft = messageLeft;
-            ConsoleWriteln(border, ConsoleColor.Yellow);
+            ConsoleWritelnMiddle(border, ConsoleColor.Yellow);
+            ConsoleWritelnMiddle(wrapper, ConsoleColor.Yellow);
+            ConsoleWriteMiddle(wrapper, ConsoleColor.Yellow);
+            ConsoleWritelnMiddle($"EEPROM Programmer version {_version}");
+            ConsoleWriteMiddle(wrapper, ConsoleColor.Yellow);
+            ConsoleWritelnMiddle($"Arduino Port: {_serialPort}");
+            ConsoleWriteMiddle(wrapper, ConsoleColor.Yellow);
+            ConsoleWritelnMiddle($"EEPROM Size: {_ROM_SIZE_BYTES} bytes");
+            ConsoleWritelnMiddle(wrapper, ConsoleColor.Yellow);
+            ConsoleWritelnMiddle(border, ConsoleColor.Yellow);
 
             Console.CursorVisible = false;
             Console.ReadKey();
@@ -69,9 +74,9 @@ namespace EEPROMProgrammer
             ConsoleWriteln(message, ConsoleColor.Green);
         }
 
-        private UInt16 GetUInt16(string prompt, UInt16 defaultValue)
+        private ushort GetUInt16(string prompt, ushort defaultValue)
         {
-            UInt16 result = defaultValue;
+            ushort result = defaultValue;
 
             var ok = false;
 
@@ -85,7 +90,7 @@ namespace EEPROMProgrammer
                 }
                 else
                 {
-                    ok = UInt16.TryParse(valueString, out result);
+                    ok = ushort.TryParse(valueString, out result);
                 }
                 if (!ok)
                 {
@@ -110,19 +115,18 @@ namespace EEPROMProgrammer
             return result;
         }
 
+        // TODO Validation
         private void ReadRom()
         {
             ConsoleClear();
             ConsoleWriteln("Read EEPROM");
             Console.WriteLine();
 
-            var start = GetUInt16("Start address", 0);
-            var length = GetUInt16("Length", 0); // TODO
+            var startBlock = GetUInt16("Start block", 0);
+            var numBlocks = GetUInt16("Number of blocks", _ROM_SIZE_BLOCKS); // TODO
 
             Console.WriteLine();
-            ConsoleWriteln($"Reading '{length}' bytes starting at '{start}'", ConsoleColor.Yellow);
-
-            var ok = _readRomCallback(start, length);
+            var ok = _readRomCallback(startBlock, numBlocks);
 
             if (ok)
             {
