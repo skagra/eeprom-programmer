@@ -1,5 +1,3 @@
-
-
 namespace EEPROMProgrammer
 {
     using static ColorConsole;

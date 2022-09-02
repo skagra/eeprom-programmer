@@ -2,10 +2,9 @@
 
 using namespace EEPROMProgrammer;
 
-byte serialOuputBuffer[64];
-
-Protocol::Protocol()
+Protocol::Protocol(Programmer *programmer)
 {
+   _programmer = programmer;
 }
 
 unsigned short DemarshallUshort(byte *buffer)
@@ -16,14 +15,18 @@ unsigned short DemarshallUshort(byte *buffer)
 void Protocol::readBlock(byte *buffer)
 {
    unsigned short blockNumber = DemarshallUshort(buffer + 1);
-   Serial.write((byte)65);
-   Serial.write((byte)OPCODE_OUT_READ_BLOCK_RESPONSE);
 
-   for (int i = 0; i < 64; i++)
+   Serial.write((byte)(_BLOCK_SIZE + 1));
+   Serial.write((byte)_OPCODE_OUT_READ_BLOCK_RESPONSE);
+
+   unsigned short addressBase = blockNumber * _BLOCK_SIZE;
+   for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++)
    {
-      serialOuputBuffer[i] = (byte)blockNumber;
+      serialBuffer[addressOffset] = _programmer->readByte(addressBase + addressOffset);
    }
-   Serial.write(serialOuputBuffer, 64);
+
+   Serial.write(serialBuffer, _BLOCK_SIZE);
+
    Serial.flush();
 }
 
@@ -31,8 +34,15 @@ void Protocol::writeBlock(byte *buffer)
 {
    unsigned short blockNumber = DemarshallUshort(buffer + 1);
 
+   unsigned short addressBase = blockNumber * _BLOCK_SIZE;
+   for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++)
+   {
+      _programmer->writeByte(buffer[addressOffset + 3], addressBase + addressOffset);
+   }
+
    Serial.write((byte)1);
-   Serial.write((byte)OPCODE_OUT_WRITE_BLOCK_RESPONSE);
+   Serial.write((byte)_OPCODE_OUT_WRITE_BLOCK_RESPONSE);
+
    Serial.flush();
 }
 
@@ -60,10 +70,10 @@ void Protocol::tick()
             _currentlyReading = false;
             switch (serialBuffer[0])
             {
-            case OPCODE_IN_READ_BLOCK_REQUEST:
+            case _OPCODE_IN_READ_BLOCK_REQUEST:
                readBlock(serialBuffer);
                break;
-            case OPCODE_IN_WRITE_BLOCK_REQUEST:
+            case _OPCODE_IN_WRITE_BLOCK_REQUEST:
                writeBlock(serialBuffer);
                break;
             default:
