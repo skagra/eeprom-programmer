@@ -13,22 +13,24 @@ Programmer::Programmer()
 {
 }
 
-// Adapted from https://github.com/skirienkopanea/eeprom-programmer/blob/master/eeprom-programmer/eeprom-programmer.ino
-// This is also doing the output endable disbale - seems like a hack ... make it explicit
 void Programmer::setAddress(unsigned short address, bool outputEnable)
 {
-    shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, (address >> 8) | (outputEnable ? 0 : 128));
+    // Or'ing in outputEnable which is not part of the address as we've run out of GPIO pins.
+    shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, (address >> 8) | (outputEnable ? 0 : 0x80));
     shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, address);
 
-    // Triggers a clock pulse for the shift register output clock signal
-    digitalWrite(SHIFT_LATCH, !digitalRead(SHIFT_LATCH));
-    digitalWrite(SHIFT_LATCH, !digitalRead(SHIFT_LATCH));
+    // Pulse to latch the shift registers
+    digitalWrite(SHIFT_LATCH, LOW);
+    digitalWrite(SHIFT_LATCH, HIGH);
+    digitalWrite(SHIFT_LATCH, LOW);
 }
 
 void Programmer::writeByte(byte data, unsigned short address)
 {
     setAddress(address, false);
 
+    // Set data pins to output
+    // TODO can we replace this with a single register write?
     for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin++)
     {
         pinMode(pin, OUTPUT);
@@ -42,10 +44,13 @@ void Programmer::writeByte(byte data, unsigned short address)
         data = data >> 1;
     }
 
+    // Pulse W/E to trigger the EEPROM write
     digitalWrite(EEPROM_WE, LOW);
     delayMicroseconds(1);
     digitalWrite(EEPROM_WE, HIGH);
 
+    // A completed write is flagged as complete when
+    // the MS-bit is read back is equal to the valu written.
     do
     {
         delay(1);
@@ -54,6 +59,7 @@ void Programmer::writeByte(byte data, unsigned short address)
 
 byte Programmer::readByte(unsigned short address)
 {
+    // TODO can we replace this with a single register write?
     for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin++)
     {
         pinMode(pin, INPUT);
