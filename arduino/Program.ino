@@ -3,11 +3,13 @@
 
 using namespace EEPROMProgrammer;
 
+#define BAUD_RATE 57600
+
 Protocol *protocol;
 
 void setup()
 {
-    Serial.begin(57600);
+    Serial.begin(BAUD_RATE);
     protocol = new Protocol(new Programmer());
 }
 

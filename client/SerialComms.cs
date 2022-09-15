@@ -53,7 +53,7 @@ namespace EEPROMProgrammer
             _serialPort.Write(buffer, offset, count);
         }
 
-        public static string? FindAnduinoComPort(string[] arduinoNames)
+        public static string? FindArduinoComPort(string[] arduinoNames)
         {
             string? result = null;
 

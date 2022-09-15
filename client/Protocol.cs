@@ -41,8 +41,6 @@ namespace EEPROMProgrammer
 
             _logger.Debug("Incoming size byte '{0}'", sizeByte);
 
-            //  Console.WriteLine($"Size: {sizeByte}");
-
             // Read the rest of the packet
             byte[] buffer = new byte[sizeByte];
             var read = 0;

@@ -20,19 +20,10 @@ Programmer::Programmer()
     pinMode(EEPROM_OE, OUTPUT);
 }
 
-void Programmer::setAddress(unsigned short address, bool outputEnable)
+void Programmer::setAddress(unsigned short address)
 {
     shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, (address >> 8));
     shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, address);
-
-    if (outputEnable)
-    {
-        digitalWrite(EEPROM_OE, LOW);
-    }
-    else
-    {
-        digitalWrite(EEPROM_OE, HIGH);
-    }
 
     // Pulse to latch the shift registers
     digitalWrite(SHIFT_LATCH, LOW);
@@ -40,9 +31,22 @@ void Programmer::setAddress(unsigned short address, bool outputEnable)
     digitalWrite(SHIFT_LATCH, LOW);
 }
 
+void Programmer::outputEnable(bool enable)
+{
+    if (enable)
+    {
+        digitalWrite(EEPROM_OE, LOW);
+    }
+    else
+    {
+        digitalWrite(EEPROM_OE, HIGH);
+    }
+}
+
 void Programmer::writeByte(byte data, unsigned short address)
 {
-    setAddress(address, false);
+    setAddress(address);
+    outputEnable(false);
 
     // Set data pins to output
     // TODO can we replace this with a single register write?
@@ -75,14 +79,15 @@ void Programmer::writeByte(byte data, unsigned short address)
 byte Programmer::readByte(unsigned short address)
 {
     // TODO can we replace this with a single register write?
-    for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1)
+    for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin++)
     {
         pinMode(pin, INPUT);
     }
-    setAddress(address, /*outputEnable*/ true);
+    setAddress(address);
+    outputEnable(true);
 
     byte data = 0;
-    for (int pin = EEPROM_D7; pin >= EEPROM_D0; pin -= 1)
+    for (int pin = EEPROM_D7; pin >= EEPROM_D0; pin--)
     {
         data = (data << 1) + digitalRead(pin);
     }

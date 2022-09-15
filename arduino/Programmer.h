@@ -8,7 +8,8 @@ namespace EEPROMProgrammer
     class Programmer
     {
     private:
-        void setAddress(unsigned short address, bool outputEnable);
+        void setAddress(unsigned short address);
+        void outputEnable(bool enable);
 
     public:
         Programmer();

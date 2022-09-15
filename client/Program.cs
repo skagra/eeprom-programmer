@@ -1,11 +1,14 @@
 ﻿namespace EEPROMProgrammer
 {
     using static ColorConsole;
+    using static ColourValues;
     using static EEPROMDefinition;
 
     public class EEPROMProgrammerMain
     {
         private const string _VERSION = "0.1";
+
+        private const int BAUD_RATE = 57600;
 
         private static readonly string[] ARDUINO_NAMES = { "CH340", "Arduino Uno" };
 
@@ -13,25 +16,25 @@
 
         private static void PrintBlock(ushort blockNumber, byte[] block)
         {
-            ConsoleWriteln($"Block number: {blockNumber}");
-            ConsoleWriteln($"Start address: 0x{(blockNumber * _BLOCK_SIZE):X4}");
+            ConsoleWriteln($"Block number: {blockNumber}", COLOUR_PROGRESS);
+            ConsoleWriteln($"Start address: 0x{(blockNumber * _BLOCK_SIZE):X4}", COLOUR_PROGRESS);
 
             for (var byteIndex = 0; byteIndex < _BLOCK_SIZE; byteIndex++)
             {
                 if (byteIndex % 16 == 0)
                 {
                     Console.WriteLine();
-                    ConsoleWrite($"0x{((blockNumber * _BLOCK_SIZE) + byteIndex):X4}\t", ConsoleColor.Gray);
+                    ConsoleWrite($"0x{((blockNumber * _BLOCK_SIZE) + byteIndex):X4}\t", COLOUR_PROGRESS);
                 }
-                ConsoleWrite($"{(block[byteIndex]):X2} ");
+                ConsoleWrite($"{(block[byteIndex]):X2} ", COLOUR_BODY);
 
             }
             Console.WriteLine();
         }
 
-        private static bool ReadEEPROM(ushort startBlockNumber, ushort numBlocks)
+        private static void ReadEEPROM(ushort startBlockNumber, ushort numBlocks)
         {
-            ConsoleWriteln($"Reading '{numBlocks}' blocks starting at block '{startBlockNumber}'", ConsoleColor.Cyan);
+            ConsoleWriteln($"Reading '{numBlocks}' blocks starting at block '{startBlockNumber}'", COLOUR_BODY);
             Console.WriteLine();
 
             for (ushort blockNum = 0; blockNum < numBlocks; blockNum++)
@@ -43,7 +46,8 @@
                 PrintBlock((ushort)(startBlockNumber + blockNum), block);
                 Console.WriteLine();
             }
-            return true;
+
+            ConsoleWriteln("Done", COLOUR_OK);
         }
 
         private static bool Compare(byte[] expected, byte[] got)
@@ -58,62 +62,86 @@
             return same;
         }
 
-        private static bool WriteEEPROM(string fileName)
+        private static void WriteEEPROM(string fileName)
         {
-            ConsoleWriteln($"Writing from file '{fileName}'", ConsoleColor.Cyan);
+            ConsoleWriteln($"Writing from file '{fileName}'", COLOUR_PROGRESS);
             Console.WriteLine();
 
             var fileInfo = new FileInfo(fileName);
             ushort numBlocks = (ushort)(((fileInfo.Length) / _BLOCK_SIZE) + ((fileInfo.Length % _BLOCK_SIZE != 0) ? 1 : 0));
 
-            ConsoleWriteln($"File size: {fileInfo.Length} bytes ({numBlocks} blocks)");
+            ConsoleWriteln($"File size: {fileInfo.Length} bytes ({numBlocks} blocks)", COLOUR_BODY);
             Console.WriteLine();
 
-            ConsoleWriteln("Writing");
+            ConsoleWriteln("Writing", COLOUR_BODY);
             var fileBytes = File.ReadAllBytes(fileName);
             for (ushort blockNum = 0; blockNum < numBlocks; blockNum++)
             {
-                ConsoleWrite($"Writing block '{blockNum}'...", ConsoleColor.Gray);
+                ConsoleWrite($"Writing block '{blockNum}'...", COLOUR_PROGRESS);
                 _protocol.WriteBlock(blockNum, fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)]);  // TODO - partials!
-                ConsoleWriteln("Done", ConsoleColor.Green);
+                ConsoleWriteln("Done", COLOUR_OK);
             }
-            ConsoleWriteln("Written", ConsoleColor.Green);
+            ConsoleWriteln("Written", COLOUR_OK);
 
             Console.WriteLine();
-            Console.WriteLine("Verifying");
+            Console.WriteLine("Verifying", COLOUR_BODY);
             var same = true;
             for (ushort blockNum = 0; blockNum < numBlocks && same; blockNum++)
             {
                 var block = _protocol.ReadBlock(blockNum);
-                ConsoleWrite($"Verifying block '{blockNum}'", ConsoleColor.Gray);
+                ConsoleWrite($"Verifying block '{blockNum}'...", ConsoleColor.Gray);
                 same = Compare(fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)], block); // TODO - partials!
                 if (same)
                 {
-                    ConsoleWriteln("OK", ConsoleColor.Green);
+                    ConsoleWriteln("OK", COLOUR_OK);
                 }
                 else
                 {
-                    ConsoleWriteln("Error", ConsoleColor.Red);
+                    ConsoleWriteln("Error", COLOUR_ERROR);
                 }
             }
 
             if (same)
             {
-                ConsoleWriteln("Verified", ConsoleColor.Green);
+                ConsoleWriteln("Verified", COLOUR_OK);
             }
             else
             {
                 // TODO
             }
-
-            return true;
         }
 
-        private static bool EraseEEPROM()
+        private static void IsEEPROMEmpty()
         {
-            var fillPattern = new byte[_BLOCK_SIZE];
-            Array.Fill<byte>(fillPattern, 0xFF);
+            ConsoleWrite("Checking", COLOUR_BODY);
+            var empty = true;
+            for (ushort blockNum = 0; blockNum < _ROM_SIZE_BLOCKS && empty; blockNum++)
+            {
+                var block = _protocol.ReadBlock(blockNum);
+                ConsoleWrite(".", COLOUR_PROGRESS);
+                empty = Compare(fillPattern, block); // TODO - partials!
+            }
+            ConsoleWriteln("Done", COLOUR_OK);
+            Console.WriteLine();
+            if (empty)
+            {
+                ConsoleWriteln("EEPROM is empty.", COLOUR_OK);
+            }
+            else
+            {
+                ConsoleWriteln("EEPROM is NOT empty.", COLOUR_ERROR);
+            }
+        }
 
+        private readonly static byte[] fillPattern;
+        static EEPROMProgrammerMain()
+        {
+            fillPattern = new byte[_BLOCK_SIZE];
+            Array.Fill<byte>(fillPattern, 0xFF);
+        }
+
+        private static void EraseEEPROM()
+        {
             ConsoleWriteln("Erasing");
             for (ushort blockNum = 0; blockNum < _ROM_SIZE_BLOCKS; blockNum++)
             {
@@ -121,7 +149,6 @@
                 _protocol.WriteBlock(blockNum, fillPattern);  // TODO - partials!
                 ConsoleWriteln("Done", ConsoleColor.Green);
             }
-            return true;
         }
 
         public static void Main(string[] args)
@@ -129,13 +156,13 @@
             ConsoleClear();
             ConsoleCentreMessage("Searching for Arduino...", ConsoleColor.Yellow);
 
-            var serialPort = SerialComms.FindAnduinoComPort(ARDUINO_NAMES);
+            var serialPort = SerialComms.FindArduinoComPort(ARDUINO_NAMES);
             if (serialPort != null)
             {
                 ConsoleClear();
                 ConsoleCentreMessage($"Arduino found on port {serialPort}", ConsoleColor.Green);
-                var menu = new Menu(serialPort, _VERSION, ReadEEPROM, WriteEEPROM, EraseEEPROM);
-                var serialComms = new SerialComms(serialPort, 57600);
+                var menu = new Menu(serialPort, _VERSION, ReadEEPROM, WriteEEPROM, IsEEPROMEmpty, EraseEEPROM);
+                var serialComms = new SerialComms(serialPort, BAUD_RATE);
                 _protocol = new Protocol(serialComms);
 
                 Thread.Sleep(1000);

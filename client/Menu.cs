@@ -1,6 +1,8 @@
 namespace EEPROMProgrammer
 {
+    using NLog.LayoutRenderers.Wrappers;
     using static ColorConsole;
+    using static ColourValues;
     using static EEPROMDefinition;
 
     public class Menu
@@ -8,32 +10,35 @@ namespace EEPROMProgrammer
         private readonly string _version;
         private readonly string _serialPort;
 
-        private readonly Func<ushort, ushort, bool> _readRomCallback;
-        private readonly Func<string, bool> _writeRomCallback;
-        private readonly Func<bool> _eraseRomCallback;
+        private readonly Action<ushort, ushort> _readRomCallback;
+        private readonly Action<string> _writeRomCallback;
+        private readonly Action _eraseRomCallback;
+        private readonly Action _isRomEmptyCallback;
 
-        public Menu(string serialPort, string version, Func<ushort, ushort, bool> readRomCallback,
-            Func<string, bool> writeRomCallback,
-            Func<bool> eraseRomCallback)
+        public Menu(string serialPort, string version, Action<ushort, ushort> readRomCallback,
+            Action<string> writeRomCallback, Action isRomEmptyCallback,
+            Action eraseRomCallback)
         {
             _serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
             _version = version ?? throw new ArgumentNullException(nameof(version));
             _readRomCallback = readRomCallback ?? throw new ArgumentNullException(nameof(readRomCallback));
             _writeRomCallback = writeRomCallback ?? throw new ArgumentNullException(nameof(readRomCallback));
+            _isRomEmptyCallback = isRomEmptyCallback ?? throw new ArgumentNullException(nameof(isRomEmptyCallback));
             _eraseRomCallback = eraseRomCallback ?? throw new ArgumentNullException(nameof(eraseRomCallback));
         }
 
         private void ShowMenu()
         {
-            ConsoleWriteln("EEPROM Programmer", ConsoleColor.Yellow);
+            ConsoleWriteln("EEPROM Programmer", COLOUR_TITLE);
             Console.WriteLine();
-            ConsoleWriteln("1) Read EEPROM");
-            ConsoleWriteln("2) Write EEPROM");
-            ConsoleWriteln("3) Erase EEPROM");
-            ConsoleWriteln("4) Show configuration");
-            ConsoleWriteln("5) Exit");
+            ConsoleWriteln("1) Read EEPROM", COLOUR_BODY);
+            ConsoleWriteln("2) Write EEPROM", COLOUR_BODY);
+            ConsoleWriteln("3) Erase EEPROM", COLOUR_BODY);
+            ConsoleWriteln("4) Check EEPROM is empty", COLOUR_BODY);
+            ConsoleWriteln("5) Show configuration", COLOUR_BODY);
+            ConsoleWriteln("6) Exit", COLOUR_BODY);
             Console.WriteLine();
-            ConsoleWrite("Enter choice> ", ConsoleColor.Yellow);
+            ConsoleWrite("Enter choice> ", COLOUR_PROMPT);
         }
 
         private void ShowVersion()
@@ -45,16 +50,16 @@ namespace EEPROMProgrammer
             var wrapper = $"#{new string(' ', boxWidth - 2)}#";
 
             Console.CursorTop = VerticalCentreCursor(3);
-            ConsoleWritelnMiddle(border, ConsoleColor.Yellow);
-            ConsoleWritelnMiddle(wrapper, ConsoleColor.Yellow);
-            ConsoleWriteMiddle(wrapper, ConsoleColor.Yellow);
-            ConsoleWritelnMiddle($"EEPROM Programmer version {_version}");
-            ConsoleWriteMiddle(wrapper, ConsoleColor.Yellow);
-            ConsoleWritelnMiddle($"Arduino Port: {_serialPort}");
-            ConsoleWriteMiddle(wrapper, ConsoleColor.Yellow);
-            ConsoleWritelnMiddle($"EEPROM Size: {_ROM_SIZE_BYTES} bytes");
-            ConsoleWritelnMiddle(wrapper, ConsoleColor.Yellow);
-            ConsoleWritelnMiddle(border, ConsoleColor.Yellow);
+            ConsoleWritelnMiddle(border, COLOUR_TITLE);
+            ConsoleWritelnMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle($"EEPROM Programmer version {_version}", COLOUR_BODY);
+            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle($"Arduino Port: {_serialPort}", COLOUR_BODY);
+            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle($"EEPROM Size: {_ROM_SIZE_BYTES} bytes", COLOUR_BODY);
+            ConsoleWritelnMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle(border, COLOUR_TITLE);
 
             Console.CursorVisible = false;
             Console.ReadKey();
@@ -64,12 +69,12 @@ namespace EEPROMProgrammer
 
         private void ShowError(string message)
         {
-            ConsoleWriteln(message, ConsoleColor.Red);
+            ConsoleWriteln(message, COLOUR_ERROR);
         }
 
         private void ShowSuccess(string message)
         {
-            ConsoleWriteln(message, ConsoleColor.Green);
+            ConsoleWriteln(message, COLOUR_OK);
         }
 
         private ushort GetUInt16(string prompt, ushort defaultValue)
@@ -80,9 +85,9 @@ namespace EEPROMProgrammer
 
             while (!ok)
             {
-                ConsoleWrite($"{prompt} [{defaultValue}]> ", ConsoleColor.Yellow);
+                ConsoleWrite($"{prompt} [{defaultValue}]> ", COLOUR_PROMPT);
                 var valueString = Console.ReadLine();
-                if (valueString.Length == 0)
+                if (valueString == null || valueString.Length == 0)
                 {
                     ok = true;
                 }
@@ -104,7 +109,7 @@ namespace EEPROMProgrammer
         {
             var result = defaultValue;
 
-            ConsoleWrite($"{prompt} [{defaultValue}]> ", ConsoleColor.Yellow);
+            ConsoleWrite($"{prompt} [{defaultValue}]> ", COLOUR_PROMPT);
             var valueString = Console.ReadLine();
             if (valueString.Length > 0)
             {
@@ -113,29 +118,17 @@ namespace EEPROMProgrammer
             return result;
         }
 
-        // TODO Validation
         private void ReadRom()
         {
             ConsoleClear();
-            ConsoleWriteln("Read EEPROM");
+            ConsoleWriteln("Read EEPROM", COLOUR_TITLE);
             Console.WriteLine();
 
             var startBlock = GetUInt16("Start block", 0);
             var numBlocks = GetUInt16("Number of blocks", _ROM_SIZE_BLOCKS); // TODO
 
             Console.WriteLine();
-            var ok = _readRomCallback(startBlock, numBlocks);
-
-            if (ok)
-            {
-                Console.WriteLine();
-                ShowSuccess("EEPROM read successful");
-            }
-            else
-            {
-                Console.WriteLine();
-                ShowError("Error while read EEPROM");
-            }
+            _readRomCallback(startBlock, numBlocks);
 
             Console.ReadKey();
         }
@@ -143,23 +136,12 @@ namespace EEPROMProgrammer
         private void WriteRom()
         {
             ConsoleClear();
-            Console.WriteLine("Write EEPROM");
+            ConsoleWriteln("Write EEPROM", COLOUR_TITLE);
             Console.WriteLine();
 
             var fileName = GetString("ROM filename", "ROM.bin");
-            ConsoleWriteln($"Writing EEPRROM from '{fileName}'", ConsoleColor.Yellow);
 
-            var ok = _writeRomCallback(fileName);
-            if (ok)
-            {
-                Console.WriteLine();
-                ShowSuccess("EEPROM write successful");
-            }
-            else
-            {
-                Console.WriteLine();
-                ShowError("Error while writing EEPROM");
-            }
+            _writeRomCallback(fileName);
 
             Console.ReadKey();
 
@@ -168,21 +150,21 @@ namespace EEPROMProgrammer
         private void EraseRom()
         {
             ConsoleClear();
-            Console.WriteLine("Erase EEPROM");
+            ConsoleWriteln("Erase EEPROM", COLOUR_TITLE);
             Console.WriteLine();
 
-            var ok = _eraseRomCallback();
+            _eraseRomCallback();
 
-            if (ok)
-            {
-                Console.WriteLine();
-                ShowSuccess("EEPROM erase successful");
-            }
-            else
-            {
-                Console.WriteLine();
-                ShowError("Error while erasing EEPROM");
-            }
+            Console.ReadKey();
+        }
+
+        private void CheckRomIsEmpty()
+        {
+            ConsoleClear();
+            ConsoleWriteln("Check whether EEPROM is empty", COLOUR_TITLE);
+            Console.WriteLine();
+
+            _isRomEmptyCallback();
 
             Console.ReadKey();
         }
@@ -206,9 +188,12 @@ namespace EEPROMProgrammer
                     EraseRom();
                     break;
                 case ConsoleKey.D4:
-                    ShowVersion();
+                    CheckRomIsEmpty();
                     break;
                 case ConsoleKey.D5:
+                    ShowVersion();
+                    break;
+                case ConsoleKey.D6:
                     quit = true;
                     break;
                 default:
