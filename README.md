@@ -2,7 +2,7 @@
 
 This project uses an *Arduino* as a `parallel EEPROM` programmer.
 
-The circuit is [Ben Eater's work](https://github.com/beneater/eeprom-programmer).  The approach to the software component though is rather different.
+The circuit is based heavily on [Ben Eater's work](https://github.com/beneater/eeprom-programmer).  The approach to the software component though is rather different.
 
 Ben included the data to be written to the Arduino in the actual sketch.  This project increases flexibility by adding a client-side application which drives an Arduino sketch via a protocol.
 

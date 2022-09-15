@@ -8,6 +8,7 @@ using namespace EEPROMProgrammer;
 #define EEPROM_D0 5
 #define EEPROM_D7 12
 #define EEPROM_WE 13
+#define EEPROM_OE 14
 
 Programmer::Programmer()
 {
@@ -16,13 +17,22 @@ Programmer::Programmer()
     pinMode(SHIFT_LATCH, OUTPUT);
     digitalWrite(EEPROM_WE, HIGH);
     pinMode(EEPROM_WE, OUTPUT);
+    pinMode(EEPROM_OE, OUTPUT);
 }
 
 void Programmer::setAddress(unsigned short address, bool outputEnable)
 {
-    // Or'ing in outputEnable which is not part of the address as we've run out of GPIO pins.
-    shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, (address >> 8) | (outputEnable ? 0 : 0x80));
+    shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, (address >> 8));
     shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, address);
+
+    if (outputEnable)
+    {
+        digitalWrite(EEPROM_OE, LOW);
+    }
+    else
+    {
+        digitalWrite(EEPROM_OE, HIGH);
+    }
 
     // Pulse to latch the shift registers
     digitalWrite(SHIFT_LATCH, LOW);
@@ -55,7 +65,7 @@ void Programmer::writeByte(byte data, unsigned short address)
     digitalWrite(EEPROM_WE, HIGH);
 
     // A completed write is flagged as complete when
-    // the MS-bit is read back is equal to the valu written.
+    // the MS-bit is read back is equal to the value written.
     do
     {
         delay(1);
