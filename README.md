@@ -2,7 +2,7 @@
 
 This project uses an *Arduino* as a `parallel EEPROM` programmer.
 
-The circuit draws heavily on [Ben Eater's work](https://github.com/beneater/eeprom-programmer).  The approach to the software component though is rather different.
+The circuit is [Ben Eater's work](https://github.com/beneater/eeprom-programmer).  The approach to the software component though is rather different.
 
 Ben included the data to be written to the Arduino in the actual sketch.  This project increases flexibility by adding a client-side application which drives an Arduino sketch via a protocol.
 
@@ -23,3 +23,5 @@ The Arduino-side side:
 * Reads data from an `EEPROM` requested via the protocol and returns the result.
 
 The project was created to write the decoder and microcode EEPROMs used in the [diy-cpu](https://github.com/skagra/diy-cpu) project.
+
+![Schematic](docs/schematic.png)
