@@ -7,7 +7,7 @@ Protocol *protocol;
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(57600);
     protocol = new Protocol(new Programmer());
 }
 

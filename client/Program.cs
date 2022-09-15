@@ -135,7 +135,7 @@
                 ConsoleClear();
                 ConsoleCentreMessage($"Arduino found on port {serialPort}", ConsoleColor.Green);
                 var menu = new Menu(serialPort, _VERSION, ReadEEPROM, WriteEEPROM, EraseEEPROM);
-                var serialComms = new SerialComms(serialPort, 9600);
+                var serialComms = new SerialComms(serialPort, 57600);
                 _protocol = new Protocol(serialComms);
 
                 Thread.Sleep(1000);
