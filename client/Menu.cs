@@ -1,6 +1,7 @@
 namespace EEPROMProgrammer
 {
     using NLog.LayoutRenderers.Wrappers;
+    using NLog.Targets;
     using static ColorConsole;
     using static ColourValues;
     using static EEPROMDefinition;
@@ -60,11 +61,6 @@ namespace EEPROMProgrammer
             ConsoleWritelnMiddle($"EEPROM Size: {_ROM_SIZE_BYTES} bytes", COLOUR_BODY);
             ConsoleWritelnMiddle(wrapper, COLOUR_TITLE);
             ConsoleWritelnMiddle(border, COLOUR_TITLE);
-
-            Console.CursorVisible = false;
-            Console.ReadKey();
-            ConsoleClear();
-            Console.CursorVisible = true;
         }
 
         private void ShowError(string message)
@@ -129,8 +125,6 @@ namespace EEPROMProgrammer
 
             Console.WriteLine();
             _readRomCallback(startBlock, numBlocks);
-
-            Console.ReadKey();
         }
 
         private void WriteRom()
@@ -142,9 +136,6 @@ namespace EEPROMProgrammer
             var fileName = GetString("ROM filename", "ROM.bin");
 
             _writeRomCallback(fileName);
-
-            Console.ReadKey();
-
         }
 
         private void EraseRom()
@@ -154,8 +145,6 @@ namespace EEPROMProgrammer
             Console.WriteLine();
 
             _eraseRomCallback();
-
-            Console.ReadKey();
         }
 
         private void CheckRomIsEmpty()
@@ -165,8 +154,6 @@ namespace EEPROMProgrammer
             Console.WriteLine();
 
             _isRomEmptyCallback();
-
-            Console.ReadKey();
         }
 
         public bool Process()
@@ -199,9 +186,15 @@ namespace EEPROMProgrammer
                 default:
                     Console.WriteLine();
                     ShowError("Please enter a choice between 1 and 5");
-                    Console.ReadKey();
                     break;
 
+            }
+
+            if (!quit)
+            {
+                Console.WriteLine();
+                ConsoleWriteln("Press a key", COLOUR_PROGRESS);
+                Console.ReadKey();
             }
 
             return quit;
