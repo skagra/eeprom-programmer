@@ -22,4 +22,4 @@ The Arduino-side side:
 * Writes data to an `EEPROM` as instructed via the protocol.
 * Reads data from an `EEPROM` requested via the protocol and returns the result.
 
-The project was created to write the decoder and microcode EEPROMs used in the the [diy-cpu](https://github.com/skagra/diy-cpu) project.
+The project was created to write the decoder and microcode EEPROMs used in the [diy-cpu](https://github.com/skagra/diy-cpu) project.
