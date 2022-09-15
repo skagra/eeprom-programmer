@@ -20,6 +20,7 @@ void Protocol::readBlock(byte *buffer)
    Serial.write((byte)_OPCODE_OUT_READ_BLOCK_RESPONSE);
 
    unsigned short addressBase = blockNumber * _BLOCK_SIZE;
+
    for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++)
    {
       serialBuffer[addressOffset] = _programmer->readByte(addressBase + addressOffset);

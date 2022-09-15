@@ -11,6 +11,11 @@ using namespace EEPROMProgrammer;
 
 Programmer::Programmer()
 {
+    pinMode(SHIFT_DATA, OUTPUT);
+    pinMode(SHIFT_CLK, OUTPUT);
+    pinMode(SHIFT_LATCH, OUTPUT);
+    digitalWrite(EEPROM_WE, HIGH);
+    pinMode(EEPROM_WE, OUTPUT);
 }
 
 void Programmer::setAddress(unsigned short address, bool outputEnable)
@@ -60,15 +65,14 @@ void Programmer::writeByte(byte data, unsigned short address)
 byte Programmer::readByte(unsigned short address)
 {
     // TODO can we replace this with a single register write?
-    for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin++)
+    for (int pin = EEPROM_D0; pin <= EEPROM_D7; pin += 1)
     {
         pinMode(pin, INPUT);
     }
-
-    setAddress(address, true);
+    setAddress(address, /*outputEnable*/ true);
 
     byte data = 0;
-    for (int pin = EEPROM_D7; pin >= EEPROM_D0; pin--)
+    for (int pin = EEPROM_D7; pin >= EEPROM_D0; pin -= 1)
     {
         data = (data << 1) + digitalRead(pin);
     }

@@ -46,6 +46,18 @@
             return true;
         }
 
+        private static bool Compare(byte[] expected, byte[] got)
+        {
+            var same = true;
+
+            for (int index = 0; index < _BLOCK_SIZE && same; index++)
+            {
+                same = expected[index] == got[index];
+            }
+
+            return same;
+        }
+
         private static bool WriteEEPROM(string fileName)
         {
             ConsoleWriteln($"Writing from file '{fileName}'", ConsoleColor.Cyan);
@@ -55,7 +67,9 @@
             ushort numBlocks = (ushort)(((fileInfo.Length) / _BLOCK_SIZE) + ((fileInfo.Length % _BLOCK_SIZE != 0) ? 1 : 0));
 
             ConsoleWriteln($"File size: {fileInfo.Length} bytes ({numBlocks} blocks)");
+            Console.WriteLine();
 
+            ConsoleWriteln("Writing");
             var fileBytes = File.ReadAllBytes(fileName);
             for (ushort blockNum = 0; blockNum < numBlocks; blockNum++)
             {
@@ -63,13 +77,50 @@
                 _protocol.WriteBlock(blockNum, fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)]);  // TODO - partials!
                 ConsoleWriteln("Done", ConsoleColor.Green);
             }
+            ConsoleWriteln("Written", ConsoleColor.Green);
+
+            Console.WriteLine();
+            Console.WriteLine("Verifying");
+            var same = true;
+            for (ushort blockNum = 0; blockNum < numBlocks && same; blockNum++)
+            {
+                var block = _protocol.ReadBlock(blockNum);
+                ConsoleWrite($"Verifying block '{blockNum}'", ConsoleColor.Gray);
+                same = Compare(fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)], block); // TODO - partials!
+                if (same)
+                {
+                    ConsoleWriteln("OK", ConsoleColor.Green);
+                }
+                else
+                {
+                    ConsoleWriteln("Error", ConsoleColor.Red);
+                }
+            }
+
+            if (same)
+            {
+                ConsoleWriteln("Verified", ConsoleColor.Green);
+            }
+            else
+            {
+                // TODO
+            }
 
             return true;
         }
 
         private static bool EraseEEPROM()
         {
-            ConsoleWrite("ERASING", ConsoleColor.Cyan);
+            var fillPattern = new byte[_BLOCK_SIZE];
+            Array.Fill<byte>(fillPattern, 0xFF);
+
+            ConsoleWriteln("Erasing");
+            for (ushort blockNum = 0; blockNum < _ROM_SIZE_BLOCKS; blockNum++)
+            {
+                ConsoleWrite($"Erasing block '{blockNum}'...", ConsoleColor.Gray);
+                _protocol.WriteBlock(blockNum, fillPattern);  // TODO - partials!
+                ConsoleWriteln("Done", ConsoleColor.Green);
+            }
             return true;
         }
 

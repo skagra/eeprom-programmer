@@ -41,7 +41,7 @@ namespace EEPROMProgrammer
 
             _logger.Debug("Incoming size byte '{0}'", sizeByte);
 
-            Console.WriteLine($"Size: {sizeByte}");
+            //  Console.WriteLine($"Size: {sizeByte}");
 
             // Read the rest of the packet
             byte[] buffer = new byte[sizeByte];
@@ -56,7 +56,6 @@ namespace EEPROMProgrammer
 
             _logger.Debug("Incoming protocol '{0}'", (BitConverter.ToString(buffer)));
 
-            Console.WriteLine($"Op: {buffer[0]}");
             return (buffer[0], buffer[1..]);
         }
 
