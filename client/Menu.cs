@@ -56,32 +56,42 @@ namespace EEPROMProgrammer
             ConsoleWriteln(message, COLOUR_OK);
         }
 
-        private ushort GetUInt16(string prompt, ushort defaultValue)
+        // TODO - validation min/max
+        private ushort GetUInt16(string prompt, ushort defaultValue, ushort minValue, ushort maxValue)
         {
             ushort result = defaultValue;
 
-            var ok = false;
+            var done = false;
 
-            while (!ok)
+            while (!done)
             {
                 ConsoleWrite($"{prompt} [{defaultValue}]> ", COLOUR_PROMPT);
                 var valueString = Console.ReadLine();
                 if (valueString == null || valueString.Length == 0)
                 {
-                    ok = true;
+                    done = true;
                 }
                 else
                 {
-                    ok = ushort.TryParse(valueString, out result);
-                }
-                if (!ok)
-                {
-                    ShowError("Invalid integer value");
+                    if (ushort.TryParse(valueString, out result))
+                    {
+                        if (result >= minValue && result <= maxValue)
+                        {
+                            done = true;
+                        }
+                        else
+                        {
+                            ShowError($"Enter an integer value between {minValue} and {maxValue}");
+                        }
+                    }
+                    else
+                    {
+                        ShowError("Invalid integer value");
+                    }
                 }
             }
 
             return result;
-
         }
 
         private string GetString(string prompt, string defaultValue)
@@ -103,8 +113,8 @@ namespace EEPROMProgrammer
             ConsoleWriteln("Read EEPROM", COLOUR_TITLE);
             Console.WriteLine();
 
-            var startBlock = GetUInt16("Start block", 0);
-            var numBlocks = GetUInt16("Number of blocks", _ROM_SIZE_BLOCKS); // TODO
+            var startBlock = GetUInt16("Start block", 0, 0, _ROM_SIZE_BLOCKS - 1);
+            var numBlocks = GetUInt16("Number of blocks", 1, 1, (ushort)(_ROM_SIZE_BLOCKS - startBlock));
 
             Console.WriteLine();
             _readRomCallback(startBlock, numBlocks);

@@ -110,7 +110,7 @@
             }
             else
             {
-                // TODO
+                // TODO - Display expected and actual block
             }
 
             Console.WriteLine();
