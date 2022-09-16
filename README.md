@@ -30,9 +30,9 @@ The code is in two sub-directories:
 
 # The protocol
 
-The PC-based client application uses a simple protocol to communicate with arduino.
+The PC-based client application uses a simple protocol to communicate with the Arduino.
 
-Each pack has the following structure
+Each protocol packet has the following structure:
 
 ```
 | Packet size (byte) | Op code (byte) | Payload |
@@ -40,14 +40,14 @@ Each pack has the following structure
 
 * `Packet size` - The packet size does not include the size byte itself.
 * `Op code` - Indicates the required operation.
-* `Payload` - Packet payload which varies for each `Op code`.
+* `Payload` - Packet payload which is dependent on the `Op code`.
 
-| Op code name         | Op code value | Direction     | Payload                                                               |
-| -------------------- | ------------- | ------------- | --------------------------------------------------------------------- |
-| READ_BLOCK_REQUEST   | 0x01          | PC -> Arduino | 16 bit block number to read                                           |
-| READ_BLOCK_RESPONSE  | 0x02          | Arduino -> PC | 64 byte data block read from EEPROM                                   |
-| WRITE_BLOCK_REQUEST  | 0x03          | PC -> Arduino | 16 bit block number, followed by 64 data block to write to the EEPROM |
-| WRITE_BLOCK_RESPONSE | 0x04          | Arduino -> PC | -                                                                     |
+| Op code name         | Op code value | Direction     | Payload                                                            |
+| -------------------- | ------------- | ------------- | ------------------------------------------------------------------ |
+| READ_BLOCK_REQUEST   | 0x01          | PC -> Arduino | 16 bit block number to read                                        |
+| READ_BLOCK_RESPONSE  | 0x02          | Arduino -> PC | Data block read from EEPROM                                        |
+| WRITE_BLOCK_REQUEST  | 0x03          | PC -> Arduino | 16 bit block number, followed by data block to write to the EEPROM |
+| WRITE_BLOCK_RESPONSE | 0x04          | Arduino -> PC | -                                                                  |
 
 * 16 bit integers are little-endian encoded.
 * Data blocks are 64 bytes in length.
