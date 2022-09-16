@@ -8,24 +8,21 @@ namespace EEPROMProgrammer
 
     public class Menu
     {
-        private readonly string _version;
-        private readonly string _serialPort;
-
         private readonly Action<ushort, ushort> _readRomCallback;
         private readonly Action<string> _writeRomCallback;
         private readonly Action _eraseRomCallback;
         private readonly Action _isRomEmptyCallback;
+        private readonly Action _showConfigurationCallback;
 
-        public Menu(string serialPort, string version, Action<ushort, ushort> readRomCallback,
+        public Menu(Action<ushort, ushort> readRomCallback,
             Action<string> writeRomCallback, Action isRomEmptyCallback,
-            Action eraseRomCallback)
+            Action eraseRomCallback, Action showConfigurationCallback)
         {
-            _serialPort = serialPort ?? throw new ArgumentNullException(nameof(serialPort));
-            _version = version ?? throw new ArgumentNullException(nameof(version));
             _readRomCallback = readRomCallback ?? throw new ArgumentNullException(nameof(readRomCallback));
             _writeRomCallback = writeRomCallback ?? throw new ArgumentNullException(nameof(readRomCallback));
             _isRomEmptyCallback = isRomEmptyCallback ?? throw new ArgumentNullException(nameof(isRomEmptyCallback));
             _eraseRomCallback = eraseRomCallback ?? throw new ArgumentNullException(nameof(eraseRomCallback));
+            _showConfigurationCallback = showConfigurationCallback ?? throw new ArgumentNullException(nameof(showConfigurationCallback));
         }
 
         private void ShowMenu()
@@ -46,21 +43,7 @@ namespace EEPROMProgrammer
         {
             ConsoleClear();
 
-            const int boxWidth = 40;
-            var border = new string('#', boxWidth);
-            var wrapper = $"#{new string(' ', boxWidth - 2)}#";
-
-            Console.CursorTop = VerticalCentreCursor(3);
-            ConsoleWritelnMiddle(border, COLOUR_TITLE);
-            ConsoleWritelnMiddle(wrapper, COLOUR_TITLE);
-            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
-            ConsoleWritelnMiddle($"EEPROM Programmer version {_version}", COLOUR_BODY);
-            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
-            ConsoleWritelnMiddle($"Arduino Port: {_serialPort}", COLOUR_BODY);
-            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
-            ConsoleWritelnMiddle($"EEPROM Size: {_ROM_SIZE_BYTES} bytes", COLOUR_BODY);
-            ConsoleWritelnMiddle(wrapper, COLOUR_TITLE);
-            ConsoleWritelnMiddle(border, COLOUR_TITLE);
+            _showConfigurationCallback();
         }
 
         private void ShowError(string message)
@@ -185,7 +168,7 @@ namespace EEPROMProgrammer
                     break;
                 default:
                     Console.WriteLine();
-                    ShowError("Please enter a choice between 1 and 5");
+                    ShowError("Please enter a choice between 1 and 6");
                     break;
 
             }
@@ -193,8 +176,10 @@ namespace EEPROMProgrammer
             if (!quit)
             {
                 Console.WriteLine();
-                ConsoleWriteln("Press a key", COLOUR_PROGRESS);
+                ConsoleWrite("Press a key", COLOUR_PROMPT);
+                Console.CursorVisible = false;
                 Console.ReadKey();
+                Console.CursorVisible = true;
             }
 
             return quit;

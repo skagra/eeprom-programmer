@@ -7,12 +7,15 @@
     public class EEPROMProgrammerMain
     {
         private const string _VERSION = "0.1";
+        private const string _EEPROM_TYPE = "AT28HC64";
 
         private const int BAUD_RATE = 57600;
 
         private static readonly string[] ARDUINO_NAMES = { "CH340", "Arduino Uno" };
 
         private static Protocol _protocol;
+
+        private static string _serialPort;
 
         private static void PrintBlock(ushort blockNumber, byte[] block)
         {
@@ -39,15 +42,15 @@
 
             for (ushort blockNum = 0; blockNum < numBlocks; blockNum++)
             {
-                ConsoleWrite($"Reading block '{blockNum}'...", ConsoleColor.Gray);
+                ConsoleWrite($"Reading block '{blockNum}'...", COLOUR_PROGRESS);
                 var block = _protocol.ReadBlock((ushort)(startBlockNumber + blockNum));
-                ConsoleWriteln("Done", ConsoleColor.Green);
+                ConsoleWriteln("Done", COLOUR_OK);
                 Console.WriteLine();
                 PrintBlock((ushort)(startBlockNumber + blockNum), block);
                 Console.WriteLine();
             }
 
-            ConsoleWriteln("Done", COLOUR_OK);
+            ConsoleWriteln("Done reading EEPROM", COLOUR_OK);
         }
 
         private static bool Compare(byte[] expected, byte[] got)
@@ -89,7 +92,7 @@
             for (ushort blockNum = 0; blockNum < numBlocks && same; blockNum++)
             {
                 var block = _protocol.ReadBlock(blockNum);
-                ConsoleWrite($"Verifying block '{blockNum}'...", ConsoleColor.Gray);
+                ConsoleWrite($"Verifying block '{blockNum}'...", COLOUR_PROGRESS);
                 same = Compare(fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)], block); // TODO - partials!
                 if (same)
                 {
@@ -109,6 +112,9 @@
             {
                 // TODO
             }
+
+            Console.WriteLine();
+            ConsoleWriteln("Done writing EEPROM", COLOUR_OK);
         }
 
         private static void IsEEPROMEmpty()
@@ -133,6 +139,27 @@
             }
         }
 
+        private static void ShowConfiguration()
+        {
+            const int boxWidth = 40;
+            var border = new string('#', boxWidth);
+            var wrapper = $"#{new string(' ', boxWidth - 2)}#";
+
+            Console.CursorTop = VerticalCentreCursor(8);
+            ConsoleWritelnMiddle(border, COLOUR_TITLE);
+            ConsoleWritelnMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle($"EEPROM Programmer version {_VERSION}", COLOUR_BODY);
+            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle($"Arduino Port: {_serialPort}", COLOUR_BODY);
+            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle($"EEPROM Type: {_EEPROM_TYPE}", COLOUR_BODY);
+            ConsoleWriteMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle($"EEPROM Size: {_ROM_SIZE_BYTES} bytes", COLOUR_BODY);
+            ConsoleWritelnMiddle(wrapper, COLOUR_TITLE);
+            ConsoleWritelnMiddle(border, COLOUR_TITLE);
+        }
+
         private readonly static byte[] fillPattern;
         static EEPROMProgrammerMain()
         {
@@ -145,10 +172,13 @@
             ConsoleWriteln("Erasing");
             for (ushort blockNum = 0; blockNum < _ROM_SIZE_BLOCKS; blockNum++)
             {
-                ConsoleWrite($"Erasing block '{blockNum}'...", ConsoleColor.Gray);
+                ConsoleWrite($"Erasing block '{blockNum}'...", COLOUR_PROGRESS);
                 _protocol.WriteBlock(blockNum, fillPattern);  // TODO - partials!
-                ConsoleWriteln("Done", ConsoleColor.Green);
+                ConsoleWriteln("Done", COLOUR_OK);
             }
+
+            Console.WriteLine();
+            ConsoleWriteln("Done erasing EEPROM", COLOUR_OK);
         }
 
         public static void Main(string[] args)
@@ -156,13 +186,13 @@
             ConsoleClear();
             ConsoleCentreMessage("Searching for Arduino...", ConsoleColor.Yellow);
 
-            var serialPort = SerialComms.FindArduinoComPort(ARDUINO_NAMES);
-            if (serialPort != null)
+            _serialPort = SerialComms.FindArduinoComPort(ARDUINO_NAMES);
+            if (_serialPort != null)
             {
                 ConsoleClear();
-                ConsoleCentreMessage($"Arduino found on port {serialPort}", ConsoleColor.Green);
-                var menu = new Menu(serialPort, _VERSION, ReadEEPROM, WriteEEPROM, IsEEPROMEmpty, EraseEEPROM);
-                var serialComms = new SerialComms(serialPort, BAUD_RATE);
+                ConsoleCentreMessage($"Arduino found on port {_serialPort}", COLOUR_OK);
+                var menu = new Menu(ReadEEPROM, WriteEEPROM, IsEEPROMEmpty, EraseEEPROM, ShowConfiguration);
+                var serialComms = new SerialComms(_serialPort, BAUD_RATE);
                 _protocol = new Protocol(serialComms);
 
                 Thread.Sleep(1000);
@@ -171,7 +201,7 @@
             else
             {
                 ConsoleClear();
-                ConsoleCentreMessage("Arduino not found", ConsoleColor.Red);
+                ConsoleCentreMessage("Arduino not found", COLOUR_ERROR);
             }
         }
     }
