@@ -28,6 +28,10 @@ The code is in two sub-directories:
 
 ![Schematic](docs/schematic.png)
 
+# Breadboard
+
+![Breadboard](docs/bboard.png)
+
 # The protocol
 
 The PC-based client application uses a simple protocol to communicate with the Arduino.
