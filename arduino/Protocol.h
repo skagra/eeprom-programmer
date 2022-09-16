@@ -25,9 +25,6 @@ namespace EEPROMProgrammer
             static const byte _OPCODE_IN_WRITE_BLOCK_REQUEST = 0x03;
             static const byte _OPCODE_OUT_WRITE_BLOCK_RESPONSE = 0x04;
 
-            // Flag an error
-            static const byte _OPCODE_OUT_OP_ERROR_RESPONSE = 0xF0;
-
             // Low level EEPROM programmer
             Programmer *_programmer;
 

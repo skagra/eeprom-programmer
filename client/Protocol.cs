@@ -14,7 +14,6 @@ namespace EEPROMProgrammer
         private const byte OPCODE_IN_READ_BLOCK_RESPONSE = 0x02;
         private const byte OPCODE_OUT_WRITE_BLOCK_REQUEST = 0x03;
         private const byte OPCODE_IN_WRITE_BLOCK_RESPONSE = 0x04;
-        private const byte OPCODE_IN_OP_ERROR_RESPONSE = 0xF0;
         private readonly SerialComms _serialComms;
 
         public Protocol(SerialComms serialComms)
@@ -62,14 +61,6 @@ namespace EEPROMProgrammer
             return ((byte)(number & 0xFF), (byte)((number >> 8) & 0xFF));
         }
 
-        private void ProcessPossibleError(byte op, byte[] buffer)
-        {
-            if (op == OPCODE_IN_OP_ERROR_RESPONSE)
-            {
-                throw new InvalidOperationException("Error returned from Arduino when processing request");
-            }
-        }
-
         public byte[] ReadBlock(ushort blockNumber)
         {
             if (blockNumber >= _ROM_SIZE_BLOCKS)
@@ -81,8 +72,6 @@ namespace EEPROMProgrammer
             WriteMessage(OPCODE_OUT_READ_BLOCK_REQUEST, new byte[] { blockNumberBytes.lsb, blockNumberBytes.msb });
 
             var (op, buffer) = ReadMessage();
-
-            ProcessPossibleError(op, buffer);
 
             if (op != OPCODE_IN_READ_BLOCK_RESPONSE)
             {
@@ -117,8 +106,6 @@ namespace EEPROMProgrammer
             WriteMessage(OPCODE_OUT_WRITE_BLOCK_REQUEST, buffer);
 
             var (op, inBuffer) = ReadMessage();
-
-            ProcessPossibleError(op, buffer);
 
             if (op != OPCODE_IN_WRITE_BLOCK_RESPONSE)
             {
