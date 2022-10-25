@@ -81,6 +81,10 @@
             for (ushort blockNum = 0; blockNum < numBlocks; blockNum++)
             {
                 ConsoleWrite($"Writing block '{blockNum}'...", COLOUR_PROGRESS);
+                if (fileBytes.Length < _BLOCK_SIZE)
+                {
+                    Array.Resize(ref fileBytes, _BLOCK_SIZE);
+                }
                 _protocol.WriteBlock(blockNum, fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)]);  // TODO - partials!
                 ConsoleWriteln("Done", COLOUR_OK);
             }
