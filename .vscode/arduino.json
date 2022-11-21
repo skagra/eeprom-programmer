@@ -1,5 +1,5 @@
 {
-    "sketch": "arduino\\Program.ino",
+    "sketch": "arduino/arduino.ino",
     "output": "build",
     "port": "COM5",
     "configuration": "cpu=atmega328",

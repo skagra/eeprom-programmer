@@ -15,6 +15,8 @@ namespace EEPROMProgrammer
         Programmer();
         void writeByte(byte data, unsigned short address);
         byte readByte(unsigned short address);
+        void disableSoftwareWriteProtect();
+        void enableSoftwareWriteProtect();
     };
 }
 

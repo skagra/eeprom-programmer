@@ -57,6 +57,24 @@ void Protocol::writeBlock()
    Serial.flush();
 }
 
+void Protocol::disableWriteProtection()
+{
+   _programmer->disableSoftwareWriteProtect();
+
+   Serial.write((byte)1);
+   Serial.write((byte)_OPCODE_DISABLE_WRITE_PROTECTION_RESPONSE);
+   Serial.flush();
+}
+
+void Protocol::enableWriteProtection()
+{
+   _programmer->enableSoftwareWriteProtect();
+
+   Serial.write((byte)1);
+   Serial.write((byte)_OPCODE_ENABLE_WRITE_PROTECTION_RESPONSE);
+   Serial.flush();
+}
+
 void Protocol::tick()
 {
    byte currentByte;
@@ -94,6 +112,12 @@ void Protocol::tick()
                break;
             case _OPCODE_IN_WRITE_BLOCK_REQUEST:
                writeBlock();
+               break;
+            case _OPCODE_DISABLE_WRITE_PROTECTION_REQUEST:
+               disableWriteProtection();
+               break;
+            case _OPCODE_ENABLE_WRITE_PROTECTION_REQUEST:
+               enableWriteProtection();
                break;
             default:
                // ERROR

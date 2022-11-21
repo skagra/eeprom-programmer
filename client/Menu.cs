@@ -13,16 +13,21 @@ namespace EEPROMProgrammer
         private readonly Action _eraseRomCallback;
         private readonly Action _isRomEmptyCallback;
         private readonly Action _showConfigurationCallback;
+        private readonly Action _disableWriteProtectionCallback;
+        private readonly Action _enableWriteProtectionCallback;
 
         public Menu(Action<ushort, ushort> readRomCallback,
             Action<string> writeRomCallback, Action isRomEmptyCallback,
-            Action eraseRomCallback, Action showConfigurationCallback)
+            Action eraseRomCallback, Action showConfigurationCallback,
+            Action disableWriteProtectionCallback, Action enableWriteProtectionCallback)
         {
             _readRomCallback = readRomCallback ?? throw new ArgumentNullException(nameof(readRomCallback));
             _writeRomCallback = writeRomCallback ?? throw new ArgumentNullException(nameof(readRomCallback));
             _isRomEmptyCallback = isRomEmptyCallback ?? throw new ArgumentNullException(nameof(isRomEmptyCallback));
             _eraseRomCallback = eraseRomCallback ?? throw new ArgumentNullException(nameof(eraseRomCallback));
             _showConfigurationCallback = showConfigurationCallback ?? throw new ArgumentNullException(nameof(showConfigurationCallback));
+            _disableWriteProtectionCallback = disableWriteProtectionCallback ?? throw new ArgumentNullException(nameof(disableWriteProtectionCallback));
+            _enableWriteProtectionCallback = enableWriteProtectionCallback ?? throw new ArgumentNullException(nameof(enableWriteProtectionCallback));
         }
 
         private void ShowMenu()
@@ -32,9 +37,11 @@ namespace EEPROMProgrammer
             ConsoleWriteln("1) Read EEPROM", COLOUR_BODY);
             ConsoleWriteln("2) Write EEPROM", COLOUR_BODY);
             ConsoleWriteln("3) Erase EEPROM", COLOUR_BODY);
-            ConsoleWriteln("4) Check EEPROM is empty", COLOUR_BODY);
-            ConsoleWriteln("5) Show configuration", COLOUR_BODY);
-            ConsoleWriteln("6) Exit", COLOUR_BODY);
+            ConsoleWriteln("4) Disable software write protection", COLOUR_BODY);
+            ConsoleWriteln("5) Enable software write protection", COLOUR_BODY);
+            ConsoleWriteln("6) Check EEPROM is empty", COLOUR_BODY);
+            ConsoleWriteln("7) Show configuration", COLOUR_BODY);
+            ConsoleWriteln("8) Exit", COLOUR_BODY);
             Console.WriteLine();
             ConsoleWrite("Enter choice> ", COLOUR_PROMPT);
         }
@@ -131,6 +138,24 @@ namespace EEPROMProgrammer
             _writeRomCallback(fileName);
         }
 
+        private void DisableWriteProtection()
+        {
+            ConsoleClear();
+            ConsoleWriteln("Disabling write protection", COLOUR_TITLE);
+            Console.WriteLine();
+
+            _disableWriteProtectionCallback();
+        }
+
+        private void EnableWriteProtection()
+        {
+            ConsoleClear();
+            ConsoleWriteln("Enabling write protection", COLOUR_TITLE);
+            Console.WriteLine();
+
+            _enableWriteProtectionCallback();
+        }
+
         private void EraseRom()
         {
             ConsoleClear();
@@ -168,19 +193,24 @@ namespace EEPROMProgrammer
                     EraseRom();
                     break;
                 case ConsoleKey.D4:
-                    CheckRomIsEmpty();
+                    DisableWriteProtection();
                     break;
                 case ConsoleKey.D5:
-                    ShowVersion();
+                    EnableWriteProtection();
                     break;
                 case ConsoleKey.D6:
+                    CheckRomIsEmpty();
+                    break;
+                case ConsoleKey.D7:
+                    ShowVersion();
+                    break;
+                case ConsoleKey.D8:
                     quit = true;
                     break;
                 default:
                     Console.WriteLine();
                     ShowError("Please enter a choice between 1 and 6");
                     break;
-
             }
 
             if (!quit)

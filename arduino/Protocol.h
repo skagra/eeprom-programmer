@@ -25,6 +25,14 @@ namespace EEPROMProgrammer
             static const byte _OPCODE_IN_WRITE_BLOCK_REQUEST = 0x03;
             static const byte _OPCODE_OUT_WRITE_BLOCK_RESPONSE = 0x04;
 
+            // Disable write protection
+            static const byte _OPCODE_DISABLE_WRITE_PROTECTION_REQUEST = 0x05;
+            static const byte _OPCODE_DISABLE_WRITE_PROTECTION_RESPONSE = 0x06;
+
+            // Enable write protection
+            static const byte _OPCODE_ENABLE_WRITE_PROTECTION_REQUEST = 0x07;
+            static const byte _OPCODE_ENABLE_WRITE_PROTECTION_RESPONSE = 0x08;
+
             // Low level EEPROM programmer
             Programmer *_programmer;
 
@@ -46,6 +54,12 @@ namespace EEPROMProgrammer
 
             // Write a block to the EEPROM
             void writeBlock();
+
+            // Disable write protection
+            void disableWriteProtection();
+
+            // Enable write protection
+            void enableWriteProtection();
 
       public:
             Protocol(Programmer *programmer);

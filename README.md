@@ -12,10 +12,13 @@ The application can:
 * Write a binary file to an EEPROM.
 * Erase an EEPROM.
 * Check whether an EEPROM is empty.
+* Enable/disable software write protection.
 
 The code and circuit targets the `AT28HC64` EEPROM, but should be easily adapted to similar ICs.
 
 The project was created to write the decoder EEPROMs and microcode EEPROMs used in the [diy-cpu](https://github.com/skagra/diy-cpu) project.
+
+The software write protection code is taken from [TommyPROM](https://github.com/TomNisbet/TommyPROM/tree/master/unlock-ben-eater-hardware) and slightly adapted.
 
 # Software Installation and Execution
 

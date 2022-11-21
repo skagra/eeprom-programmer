@@ -12,8 +12,16 @@ namespace EEPROMProgrammer
 
         private const byte OPCODE_OUT_READ_BLOCK_REQUEST = 0x01;
         private const byte OPCODE_IN_READ_BLOCK_RESPONSE = 0x02;
+
         private const byte OPCODE_OUT_WRITE_BLOCK_REQUEST = 0x03;
         private const byte OPCODE_IN_WRITE_BLOCK_RESPONSE = 0x04;
+
+        private const byte _OPCODE_OUT_DISABLE_WRITE_PROTECTION_REQUEST = 0x05;
+        private const byte _OPCODE_IN_DISABLE_WRITE_PROTECTION_RESPONSE = 0x06;
+
+        private const byte _OPCODE_OUT_ENABLE_WRITE_PROTECTION_REQUEST = 0x07;
+        private const byte _OPCODE_IN_ENABLE_WRITE_PROTECTION_RESPONSE = 0x08;
+
         private readonly SerialComms _serialComms;
 
         public Protocol(SerialComms serialComms)
@@ -86,6 +94,28 @@ namespace EEPROMProgrammer
             return buffer;
         }
 
+        public void DisableWriteProtection()
+        {
+            WriteMessage(_OPCODE_OUT_DISABLE_WRITE_PROTECTION_REQUEST, new byte[] { });
+
+            var (op, buffer) = ReadMessage();
+            if (op != _OPCODE_IN_DISABLE_WRITE_PROTECTION_RESPONSE)
+            {
+                throw new InvalidOperationException($"Expected response of type '{_OPCODE_IN_DISABLE_WRITE_PROTECTION_RESPONSE}' but got '{op}'");
+            }
+        }
+
+        public void EnableWriteProtection()
+        {
+            WriteMessage(_OPCODE_OUT_ENABLE_WRITE_PROTECTION_REQUEST, new byte[] { });
+
+            var (op, buffer) = ReadMessage();
+            if (op != _OPCODE_IN_ENABLE_WRITE_PROTECTION_RESPONSE)
+            {
+                throw new InvalidOperationException($"Expected response of type '{_OPCODE_IN_ENABLE_WRITE_PROTECTION_RESPONSE}' but got '{op}'");
+            }
+        }
+
         public void WriteBlock(ushort blockNumber, byte[] block)
         {
             if (block.Length != BLOCK_SIZE)
@@ -112,5 +142,7 @@ namespace EEPROMProgrammer
                 throw new InvalidOperationException($"Expected response of type '{OPCODE_IN_WRITE_BLOCK_RESPONSE}' but got '{op}'");
             }
         }
+
+
     }
 }

@@ -2,15 +2,8 @@
 
 using namespace EEPROMProgrammer;
 
-// EEPROM pin numbers for AT28C64
-// Change for different sizes of EEPROM
-#define SHIFT_DATA_PIN 2  // -> Shift register 1 SER pin (14)
-#define SHIFT_CLK_PIN 3   // -> Shift registers SRCLCK pins (11)
-#define SHIFT_LATCH_PIN 4 // -> Shift registers RCLC pins (12)
-#define EEPROM_D0_PIN 5   // -> EEPROM LSB data pin
-#define EEPROM_D7_PIN 12  // -> EEPROM MSB data pin
-#define EEPROM_WE_PIN 13  // -> EEPROM ~WE pin (27)
-#define EEPROM_OE_PIN 14  // -> EEPROM ~OE pin (22)
+#include "Pins.h"
+#include "Swp.h"
 
 Programmer::Programmer()
 {
@@ -24,6 +17,11 @@ Programmer::Programmer()
 
 void Programmer::setAddress(unsigned short address)
 {
+    for (int pin = EEPROM_D0_PIN; pin <= EEPROM_D7_PIN; pin++)
+    {
+        pinMode(pin, OUTPUT);
+    }
+
     // Write the address to the shift registers
     shiftOut(SHIFT_DATA_PIN, SHIFT_CLK_PIN, MSBFIRST, (address >> 8));
     shiftOut(SHIFT_DATA_PIN, SHIFT_CLK_PIN, MSBFIRST, address);
@@ -71,6 +69,7 @@ void Programmer::writeByte(byte data, unsigned short address)
     }
 
     // Trigger write
+    delayMicroseconds(1);
     digitalWrite(EEPROM_WE_PIN, LOW);
     delayMicroseconds(1);
     digitalWrite(EEPROM_WE_PIN, HIGH);
@@ -104,4 +103,14 @@ byte Programmer::readByte(unsigned short address)
     }
 
     return data;
+}
+
+void Programmer::disableSoftwareWriteProtect()
+{
+    Swp::disableSoftwareWriteProtect();
+}
+
+void Programmer::enableSoftwareWriteProtect()
+{
+    Swp::enableSoftwareWriteProtect();
 }

@@ -185,6 +185,18 @@
             ConsoleWriteln("Done erasing EEPROM", COLOUR_OK);
         }
 
+        private static void DisableWriteProtection()
+        {
+            ConsoleWriteln("Disabling write protection");
+            _protocol.DisableWriteProtection();
+        }
+
+        private static void EnableWriteProtection()
+        {
+            ConsoleWriteln("Enabling write protection");
+            _protocol.EnableWriteProtection();
+        }
+
         public static void Main(string[] args)
         {
             ConsoleClear();
@@ -195,7 +207,7 @@
             {
                 ConsoleClear();
                 ConsoleCentreMessage($"Arduino found on port {_serialPort}", COLOUR_OK);
-                var menu = new Menu(ReadEEPROM, WriteEEPROM, IsEEPROMEmpty, EraseEEPROM, ShowConfiguration);
+                var menu = new Menu(ReadEEPROM, WriteEEPROM, IsEEPROMEmpty, EraseEEPROM, ShowConfiguration, DisableWriteProtection, EnableWriteProtection);
                 var serialComms = new SerialComms(_serialPort, BAUD_RATE);
                 _protocol = new Protocol(serialComms);
 
