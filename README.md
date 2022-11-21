@@ -49,12 +49,16 @@ Each protocol packet has the following structure:
 * `Op code` - Indicates the required operation.
 * `Payload` - Packet payload which is dependent on the `Op code`.
 
-| Op code name         | Op code value | Direction     | Payload                                                            |
-| -------------------- | ------------- | ------------- | ------------------------------------------------------------------ |
-| READ_BLOCK_REQUEST   | 0x01          | PC -> Arduino | 16 bit block number to read                                        |
-| READ_BLOCK_RESPONSE  | 0x02          | Arduino -> PC | Data block read from EEPROM                                        |
-| WRITE_BLOCK_REQUEST  | 0x03          | PC -> Arduino | 16 bit block number, followed by data block to write to the EEPROM |
-| WRITE_BLOCK_RESPONSE | 0x04          | Arduino -> PC | -                                                                  |
+| Op code name                      | Op code value | Direction     | Payload                                                            |
+| --------------------------------- | ------------- | ------------- | ------------------------------------------------------------------ |
+| READ_BLOCK_REQUEST                | 0x01          | PC -> Arduino | 16 bit block number to read                                        |
+| READ_BLOCK_RESPONSE               | 0x02          | Arduino -> PC | Data block read from EEPROM                                        |
+| WRITE_BLOCK_REQUEST               | 0x03          | PC -> Arduino | 16 bit block number, followed by data block to write to the EEPROM |
+| WRITE_BLOCK_RESPONSE              | 0x04          | Arduino -> PC | -                                                                  |
+| DISABLE_WRITE_PROTECTION_REQUEST  | 0x05          | PC -> Arduino | -                                                                  |
+| DISABLE_WRITE_PROTECTION_RESPONSE | 0x06          | Arduino -> PC | -                                                                  |
+| ENABLE_WRITE_PROTECTION_REQUEST   | 0x07          | PC -> Arduino | -                                                                  |
+| ENABLE_WRITE_PROTECTION_RESPONSE  | 0x08          | Arduino -> PC | -                                                                  |
 
 * 16 bit integers are little-endian encoded.
 * Data blocks are 64 bytes in length.
