@@ -38,22 +38,31 @@ void Protocol::readBlock()
 
 void Protocol::writeBlock()
 {
+   bool ok = true;
+
    // Skip the op code byte - the get the block number to write
    unsigned short blockNumber = demarshallUshort(serialBuffer + 1);
 
    // Write the block of data to the EEPROM
    unsigned short addressBase = blockNumber * _BLOCK_SIZE;
-   for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++)
+   for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++ && ok)
    {
       // +3 offset skipping op code byte and block number short
-      _programmer->writeByte(serialBuffer[addressOffset + 3], addressBase + addressOffset);
+      ok = _programmer->writeByte(serialBuffer[addressOffset + 3], addressBase + addressOffset);
    }
 
    // Write the response protocol size (just an op code)
    Serial.write((byte)1);
 
    // Write the response
-   Serial.write((byte)_OPCODE_OUT_WRITE_BLOCK_RESPONSE);
+   if (ok)
+   {
+      Serial.write((byte)_OPCODE_OUT_WRITE_BLOCK_RESPONSE);
+   }
+   else
+   {
+      Serial.write((byte)_ERROR_RESPONSE);
+   }
    Serial.flush();
 }
 

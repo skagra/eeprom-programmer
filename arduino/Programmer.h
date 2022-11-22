@@ -13,7 +13,7 @@ namespace EEPROMProgrammer
 
     public:
         Programmer();
-        void writeByte(byte data, unsigned short address);
+        bool writeByte(byte data, unsigned short address);
         byte readByte(unsigned short address);
         void disableSoftwareWriteProtect();
         void enableSoftwareWriteProtect();

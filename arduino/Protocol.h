@@ -33,6 +33,9 @@ namespace EEPROMProgrammer
             static const byte _OPCODE_ENABLE_WRITE_PROTECTION_REQUEST = 0x07;
             static const byte _OPCODE_ENABLE_WRITE_PROTECTION_RESPONSE = 0x08;
 
+            // Error condition
+            static const byte _ERROR_RESPONSE = 0xFF;
+
             // Low level EEPROM programmer
             Programmer *_programmer;
 

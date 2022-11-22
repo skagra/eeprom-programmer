@@ -1,3 +1,4 @@
+using System.Reflection.Metadata.Ecma335;
 using NLog;
 
 namespace EEPROMProgrammer
@@ -21,6 +22,8 @@ namespace EEPROMProgrammer
 
         private const byte _OPCODE_OUT_ENABLE_WRITE_PROTECTION_REQUEST = 0x07;
         private const byte _OPCODE_IN_ENABLE_WRITE_PROTECTION_RESPONSE = 0x08;
+
+        private const byte _ERROR_RESPONSE = 0xFF;
 
         private readonly SerialComms _serialComms;
 
@@ -137,12 +140,15 @@ namespace EEPROMProgrammer
 
             var (op, inBuffer) = ReadMessage();
 
+            if (op == _ERROR_RESPONSE)
+            {
+                throw new EEPROMWriteError();
+            }
+            else
             if (op != OPCODE_IN_WRITE_BLOCK_RESPONSE)
             {
                 throw new InvalidOperationException($"Expected response of type '{OPCODE_IN_WRITE_BLOCK_RESPONSE}' but got '{op}'");
             }
         }
-
-
     }
 }

@@ -76,49 +76,57 @@
             ConsoleWriteln($"File size: {fileInfo.Length} bytes ({numBlocks} blocks)", COLOUR_BODY);
             Console.WriteLine();
 
-            ConsoleWriteln("Writing", COLOUR_BODY);
-            var fileBytes = File.ReadAllBytes(fileName);
-            for (ushort blockNum = 0; blockNum < numBlocks; blockNum++)
+            try
             {
-                ConsoleWrite($"Writing block '{blockNum}'...", COLOUR_PROGRESS);
-                if (fileBytes.Length < _BLOCK_SIZE)
+                ConsoleWriteln("Writing", COLOUR_BODY);
+                var fileBytes = File.ReadAllBytes(fileName);
+                for (ushort blockNum = 0; blockNum < numBlocks; blockNum++)
                 {
-                    Array.Resize(ref fileBytes, _BLOCK_SIZE);
+                    ConsoleWrite($"Writing block '{blockNum}'...", COLOUR_PROGRESS);
+                    if (fileBytes.Length < _BLOCK_SIZE)
+                    {
+                        Array.Resize(ref fileBytes, _BLOCK_SIZE);
+                    }
+                    _protocol.WriteBlock(blockNum, fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)]);  // TODO - partials!
+                    ConsoleWriteln("Done", COLOUR_OK);
                 }
-                _protocol.WriteBlock(blockNum, fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)]);  // TODO - partials!
-                ConsoleWriteln("Done", COLOUR_OK);
-            }
-            ConsoleWriteln("Written", COLOUR_OK);
+                ConsoleWriteln("Written", COLOUR_OK);
 
-            Console.WriteLine();
-            Console.WriteLine("Verifying", COLOUR_BODY);
-            var same = true;
-            for (ushort blockNum = 0; blockNum < numBlocks && same; blockNum++)
-            {
-                var block = _protocol.ReadBlock(blockNum);
-                ConsoleWrite($"Verifying block '{blockNum}'...", COLOUR_PROGRESS);
-                same = Compare(fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)], block); // TODO - partials!
+                Console.WriteLine();
+                Console.WriteLine("Verifying", COLOUR_BODY);
+                var same = true;
+                for (ushort blockNum = 0; blockNum < numBlocks && same; blockNum++)
+                {
+                    var block = _protocol.ReadBlock(blockNum);
+                    ConsoleWrite($"Verifying block '{blockNum}'...", COLOUR_PROGRESS);
+                    same = Compare(fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)], block); // TODO - partials!
+                    if (same)
+                    {
+                        ConsoleWriteln("OK", COLOUR_OK);
+                    }
+                    else
+                    {
+                        ConsoleWriteln("Error", COLOUR_ERROR);
+                    }
+                }
+
                 if (same)
                 {
-                    ConsoleWriteln("OK", COLOUR_OK);
+                    ConsoleWriteln("Verified", COLOUR_OK);
                 }
                 else
                 {
-                    ConsoleWriteln("Error", COLOUR_ERROR);
+                    // TODO - Display expected and actual block
                 }
-            }
 
-            if (same)
-            {
-                ConsoleWriteln("Verified", COLOUR_OK);
+                Console.WriteLine();
+                ConsoleWriteln("Done writing EEPROM", COLOUR_OK);
             }
-            else
+            catch (EEPROMWriteError e)
             {
-                // TODO - Display expected and actual block
+                Console.WriteLine();
+                ConsoleWriteln("Error writing EEPROM", COLOUR_ERROR);
             }
-
-            Console.WriteLine();
-            ConsoleWriteln("Done writing EEPROM", COLOUR_OK);
         }
 
         private static void IsEEPROMEmpty()

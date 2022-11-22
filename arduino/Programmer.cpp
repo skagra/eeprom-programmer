@@ -5,6 +5,8 @@ using namespace EEPROMProgrammer;
 #include "Pins.h"
 #include "Swp.h"
 
+#define MAX_WRITE_CYCLES 100
+
 Programmer::Programmer()
 {
     pinMode(SHIFT_DATA_PIN, OUTPUT);
@@ -44,8 +46,10 @@ void Programmer::outputEnable(bool enable)
     }
 }
 
-void Programmer::writeByte(byte data, unsigned short address)
+bool Programmer::writeByte(byte data, unsigned short address)
 {
+    bool result = false;
+
     // Set EEPROM address to write to
     setAddress(address);
 
@@ -76,10 +80,20 @@ void Programmer::writeByte(byte data, unsigned short address)
 
     // A completed write is flagged as complete when
     // the MS-bit read back is equal to the value written.
-    do
+    int writeCycle = 0;
+    while ((!result) && writeCycle < MAX_WRITE_CYCLES)
     {
-        delay(1);
-    } while ((readByte(address) & 0x80) != msb);
+        if ((readByte(address) & 0x80) == msb)
+        {
+            result = true;
+        }
+        else
+        {
+            delayMicroseconds(1);
+            writeCycle++;
+        }
+    }
+    return result;
 }
 
 byte Programmer::readByte(unsigned short address)
