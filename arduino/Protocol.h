@@ -40,7 +40,7 @@ namespace EEPROMProgrammer
             Programmer *_programmer;
 
             // Protocol buffer
-            byte serialBuffer[_SERIAL_BUFFER_SIZE];
+            byte _serialBuffer[_SERIAL_BUFFER_SIZE];
 
             // Protocol buffer read index
             int _serialBufferIndex = 0;

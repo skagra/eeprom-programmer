@@ -16,7 +16,7 @@ unsigned short demarshallUshort(byte *buffer)
 void Protocol::readBlock()
 {
    // Skip the op code byte - then content is the requested block number
-   unsigned short blockNumber = demarshallUshort(serialBuffer + 1);
+   unsigned short blockNumber = demarshallUshort(_serialBuffer + 1);
 
    // Protocol packet size
    Serial.write((byte)(_BLOCK_SIZE + 1));
@@ -28,11 +28,11 @@ void Protocol::readBlock()
    unsigned short addressBase = blockNumber * _BLOCK_SIZE;
    for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++)
    {
-      serialBuffer[addressOffset] = _programmer->readByte(addressBase + addressOffset);
+      _serialBuffer[addressOffset] = _programmer->readByte(addressBase + addressOffset);
    }
 
    // Write the result
-   Serial.write(serialBuffer, _BLOCK_SIZE);
+   Serial.write(_serialBuffer, _BLOCK_SIZE);
    Serial.flush();
 }
 
@@ -41,14 +41,14 @@ void Protocol::writeBlock()
    bool ok = true;
 
    // Skip the op code byte - the get the block number to write
-   unsigned short blockNumber = demarshallUshort(serialBuffer + 1);
+   unsigned short blockNumber = demarshallUshort(_serialBuffer + 1);
 
    // Write the block of data to the EEPROM
    unsigned short addressBase = blockNumber * _BLOCK_SIZE;
    for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++ && ok)
    {
       // +3 offset skipping op code byte and block number short
-      ok = _programmer->writeByte(serialBuffer[addressOffset + 3], addressBase + addressOffset);
+      ok = _programmer->writeByte(_serialBuffer[addressOffset + 3], addressBase + addressOffset);
    }
 
    // Write the response protocol size (just an op code)
@@ -107,14 +107,14 @@ void Protocol::tick()
       else
       {
          // Store the current byte
-         serialBuffer[_serialBufferIndex] = currentByte;
+         _serialBuffer[_serialBufferIndex] = currentByte;
          _serialBufferIndex++;
          if (_serialBufferIndex == _totalBytesToRead)
          {
             // Done reading - so use the op code byte call the
             // associated routine
             _currentlyReading = false;
-            switch (serialBuffer[0])
+            switch (_serialBuffer[0])
             {
             case _OPCODE_IN_READ_BLOCK_REQUEST:
                readBlock();
