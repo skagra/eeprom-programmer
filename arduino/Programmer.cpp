@@ -19,10 +19,10 @@ Programmer::Programmer()
 
 void Programmer::setAddress(unsigned short address)
 {
-    for (int pin = EEPROM_D0_PIN; pin <= EEPROM_D7_PIN; pin++)
-    {
-        pinMode(pin, OUTPUT);
-    }
+    // for (int pin = EEPROM_D0_PIN; pin <= EEPROM_D7_PIN; pin++)
+    // {
+    //     pinMode(pin, OUTPUT);
+    // }
 
     // Write the address to the shift registers
     shiftOut(SHIFT_DATA_PIN, SHIFT_CLK_PIN, MSBFIRST, (address >> 8));
@@ -117,6 +117,23 @@ byte Programmer::readByte(unsigned short address)
     }
 
     return data;
+}
+
+#define _BLOCK_SIZE 64
+
+void Programmer::readBlock(unsigned short blockNumber, byte *buffer)
+{
+    DDRB &= 0b11100000; // Port B maps to pins D6 -> D13 (bits 6 and 7 and crystal pins) - reading pins 8->12
+    DDRD &= 0b00011111; // Port D maps to pins D0 -> D7 -> reading pins 5->7
+
+    outputEnable(true);
+
+    unsigned short addressBase = blockNumber * _BLOCK_SIZE;
+    for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++)
+    {
+        setAddress(addressBase + addressOffset);
+        buffer[addressOffset] = (PINB << 3) | (PIND & 0b11100000) >> 5;
+    }
 }
 
 void Programmer::disableSoftwareWriteProtect()

@@ -25,11 +25,13 @@ void Protocol::readBlock()
    Serial.write((byte)_OPCODE_OUT_READ_BLOCK_RESPONSE);
 
    // Packet content - a EEPROM block
-   unsigned short addressBase = blockNumber * _BLOCK_SIZE;
-   for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++)
-   {
-      _serialBuffer[addressOffset] = _programmer->readByte(addressBase + addressOffset);
-   }
+   // unsigned short addressBase = blockNumber * _BLOCK_SIZE;
+   // for (int addressOffset = 0; addressOffset < _BLOCK_SIZE; addressOffset++)
+   // {
+   //    _serialBuffer[addressOffset] = _programmer->readByte(addressBase + addressOffset);
+   // }
+
+   _programmer->readBlock(blockNumber, _serialBuffer);
 
    // Write the result
    Serial.write(_serialBuffer, _BLOCK_SIZE);

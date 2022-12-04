@@ -17,6 +17,7 @@ namespace EEPROMProgrammer
         byte readByte(unsigned short address);
         void disableSoftwareWriteProtect();
         void enableSoftwareWriteProtect();
+        void readBlock(unsigned short blockNumber, byte *buffer);
     };
 }
 
