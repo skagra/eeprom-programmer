@@ -85,12 +85,6 @@
                 {
                     ConsoleWrite($"Writing block '{blockNum}'...", COLOUR_PROGRESS);
 
-                    // ONLY WORKS FOR FIRST BLOCK!
-                    // if (fileBytes.Length < _BLOCK_SIZE)
-                    // {
-                    //     Array.Resize(ref fileBytes, _BLOCK_SIZE);
-                    // }
-
                     // Last block?
                     if (blockNum != numBlocks - 1)
                     {
@@ -111,8 +105,6 @@
                             var buffer = new byte[_BLOCK_SIZE];
                             Array.Fill(buffer, (byte)0xFF);
                             Array.Copy(fileBytes, blockNum * _BLOCK_SIZE, buffer, 0, fileBytes.Length % _BLOCK_SIZE);
-                            ConsoleWrite($"Excess bytes {fileBytes.Length % _BLOCK_SIZE}", COLOUR_PROGRESS);
-                            ConsoleWrite($"{buffer[0]} {buffer[1]}");
                             _protocol.WriteBlock(blockNum, buffer);
                         }
 
