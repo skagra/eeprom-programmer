@@ -121,6 +121,8 @@ namespace EEPROMProgrammer
 
         public void WriteBlock(ushort blockNumber, byte[] block)
         {
+            Console.WriteLine($"Writing block {blockNumber}");
+
             if (block.Length != BLOCK_SIZE)
             {
                 throw new ArgumentOutOfRangeException(nameof(block));

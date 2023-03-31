@@ -1,5 +1,6 @@
 ﻿namespace EEPROMProgrammer
 {
+    using System;
     using static ColorConsole;
     using static ColourValues;
     using static EEPROMDefinition;
@@ -57,7 +58,7 @@
         {
             var same = true;
 
-            for (int index = 0; index < _BLOCK_SIZE && same; index++)
+            for (int index = 0; index < expected.Length && same; index++)
             {
                 same = expected[index] == got[index];
             }
@@ -83,11 +84,40 @@
                 for (ushort blockNum = 0; blockNum < numBlocks; blockNum++)
                 {
                     ConsoleWrite($"Writing block '{blockNum}'...", COLOUR_PROGRESS);
-                    if (fileBytes.Length < _BLOCK_SIZE)
+
+                    // ONLY WORKS FOR FIRST BLOCK!
+                    // if (fileBytes.Length < _BLOCK_SIZE)
+                    // {
+                    //     Array.Resize(ref fileBytes, _BLOCK_SIZE);
+                    // }
+
+                    // Last block?
+                    if (blockNum != numBlocks - 1)
                     {
-                        Array.Resize(ref fileBytes, _BLOCK_SIZE);
+                        // No
+                        _protocol.WriteBlock(blockNum, fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)]);
                     }
-                    _protocol.WriteBlock(blockNum, fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)]);  // TODO - partials!
+                    else
+                    {
+                        // Does the last chunk fill a block exactly?
+                        if (blockNum * _BLOCK_SIZE == fileBytes.Length)
+                        {
+                            // Full
+                            _protocol.WriteBlock(blockNum, fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)]);
+                        }
+                        else
+                        {
+                            // Partial
+                            var buffer = new byte[_BLOCK_SIZE];
+                            Array.Fill(buffer, (byte)0xFF);
+                            Array.Copy(fileBytes, blockNum * _BLOCK_SIZE, buffer, 0, fileBytes.Length % _BLOCK_SIZE);
+                            ConsoleWrite($"Excess bytes {fileBytes.Length % _BLOCK_SIZE}", COLOUR_PROGRESS);
+                            ConsoleWrite($"{buffer[0]} {buffer[1]}");
+                            _protocol.WriteBlock(blockNum, buffer);
+                        }
+
+                    }
+
                     ConsoleWriteln("Done", COLOUR_OK);
                 }
                 ConsoleWriteln("Written", COLOUR_OK);
@@ -99,7 +129,15 @@
                 {
                     var block = _protocol.ReadBlock(blockNum);
                     ConsoleWrite($"Verifying block '{blockNum}'...", COLOUR_PROGRESS);
-                    same = Compare(fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)], block); // TODO - partials!
+                    if (blockNum * _BLOCK_SIZE == fileBytes.Length)
+                    {
+                        same = Compare(fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum + 1) * _BLOCK_SIZE)], block);
+                    }
+                    else
+                    {
+                        same = Compare(fileBytes[(blockNum * _BLOCK_SIZE)..((blockNum * _BLOCK_SIZE) + (fileBytes.Length % _BLOCK_SIZE))], block);
+                    }
+
                     if (same)
                     {
                         ConsoleWriteln("OK", COLOUR_OK);
